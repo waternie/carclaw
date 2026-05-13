@@ -2,13 +2,6 @@
 
 CarClaw 是面向汽车维修诊断的垂直 AI 工作台，不是通用聊天站，也不是普通文档搜索站。任何 AI-agent 在本仓库工作时，都要围绕真实诊断闭环维护产品一致性：`DiagnosticCase -> DTC/症状 -> 证据 -> 检测步骤 -> 维修动作 -> 验证 -> 报告`。
 
-## 垂直场景定位
-
-- 核心用户：维修技师、维修资料整理者、诊断工具开发者、小型维修团队。
-- 核心任务：把车辆故障现象、诊断仪数据、维修手册证据和 AI 推理组织成可审计的诊断 Case。
-- 核心壁垒：DTC 证据图、维修手册 source 追溯、UDS 诊断工具链、Case 事件日志、可复用诊断 skill。
-- 不做泛化：不要把 CarClaw 改成通用知识库、通用 Agent 平台、通用客服机器人或纯 prompt 工具。
-
 ## 入口顺序
 
 1. 先读 `CARCLAW_ARCHITECTURE.md`，理解整体组件、端口、MCP 工具和诊断流程。
@@ -16,16 +9,15 @@ CarClaw 是面向汽车维修诊断的垂直 AI 工作台，不是通用聊天�
 3. 知识库、RAG、GraphRAG、Wiki 编译相关任务，读 `docs/adr-kb-rag-graphrag-llm-wiki.md`、`docs/kb-redesign-blueprint.md` 和 `docs/manual-import-pipeline.md`。
 4. Agent 对话、工具调用、权限、Case 事件相关任务，读 `ai-agent/README.md`、`ai-agent/MCP_SETUP.md` 和 `ai-agent/agent.py`。
 5. MCP 工具相关任务，读 `uds-mcp/README.md` 或 `solution-mcp/README.md`。
-6. 诊断 skill 相关任务，读 `.cursor/skills/vehicle-diagnosis/SKILL.md` 和 `.cursor/skills/vehicle-diagnosis/examples.md`。
+6. 诊断 skill 相关任务，读 `./skills/vehicle-diagnosis/SKILL.md` 和 `./skills/vehicle-diagnosis/examples.md`。
 
 ## 目录职责
 
 - `ai-agent/`: CarClaw Agent 后端、对话 UI、认证、会话、Case 事件、模型调用和 MCP 子进程管理。
-- `.cursor/skills/`: 诊断运行时 skill。这里定义用户意图、触发词、工具顺序和报告格式。
+- `skills/`: 诊断运行时 skill。这里定义用户意图、触发词、工具顺序和报告格式。
 - `uds-mcp/`: 诊断通信 MCP。负责连接 diag core、读取 DTC、读取版本、自定义 UDS 命令。
 - `solution-mcp/`: 维修方案 MCP。负责把 DTC/关键词/章节查询转发到知识库 v2 API。
 - `kb_wiki_llm/`: 维修知识库平台。包括 Vue 前端、Node 后端、PDF 手册导入、v2 corpus/index/model/DTC graph/wiki pipeline。
-- `docs/`: 产品设计、ADR、知识库重构蓝图和导入流程。架构争议优先沉淀到这里。
 - `docker/` 和 `docker-compose.yml`: 本地/产品化部署入口，默认端口范围是 `6200-6204`。
 - `Rule/`: 语言和前端设计规则。做对应技术栈修改时要参考。
 
@@ -82,10 +74,7 @@ CarClaw 是面向汽车维修诊断的垂直 AI 工作台，不是通用聊天�
 - 运行导入和重建时，从 `kb_wiki_llm/backend` 执行：
 
 ```powershell
-npm run kb:manuals -- scan
-npm run kb:manuals -- register --file ../../book/example.pdf --id example --title "Example Manual"
-npm run kb:manuals -- import --id example
-npm run kb:rebuild:v2
+略
 ```
 
 - DTC 是最高优先级实体。任何知识库改动都不能降低 DTC 查询、证据引用和复核状态的可靠性。
@@ -103,53 +92,7 @@ npm run kb:rebuild:v2
 
 ## 常用命令
 
-根目录：
 
-```powershell
-.\start-carclaw.bat
-.\stop-carclaw.bat
-docker compose up -d --build
-docker compose down
-```
-
-Agent：
-
-```powershell
-cd ai-agent
-python start.py
-python test_mcp.py
-python test_vehicle.py
-python -m py_compile agent.py auth.py
-```
-
-知识库：
-
-```powershell
-cd kb_wiki_llm
-npm run install:all
-npm run dev
-npm run build
-cd backend
-npm test
-npm run kb:rebuild:v2
-```
-
-Solution MCP：
-
-```powershell
-cd solution-mcp
-npm install
-npm run build
-npm run start
-```
-
-UDS MCP：
-
-```powershell
-cd uds-mcp
-pip install -r requirements.txt
-python -u server.py
-```
 
 ## 验证要求
 
@@ -159,15 +102,6 @@ python -u server.py
 - 修改前端后，运行 `npm run build`。
 - 修改 Docker 或端口配置后，验证 `docker compose up -d --build` 能启动相关服务。
 
-## 将 CarClaw 封装成工作流协议包
 
-CarClaw 的协议包由以下部分组成：
 
-- `AGENTS.md`: 项目级工作协议，定义场景、边界、证据规则、工具权限和验证命令。
-- `.cursor/skills/vehicle-diagnosis/SKILL.md`: 运行时诊断 skill，定义触发词、工具顺序和报告模板。
-- `ai-agent/mcp-config.json`: 工具协议入口，连接 UDS MCP 和 Solution MCP。
-- `docs/adr-kb-rag-graphrag-llm-wiki.md`: 知识源、RAG、GraphRAG 和 Wiki 编译的架构约束。
-- `kb_wiki_llm/backend/pipeline/`: source 注册、导入、索引、DTC graph 和 wiki 编译流水线。
-- `DiagnosticCase` 与事件日志：真实诊断过程的状态、审计和复盘层。
 
-这个封装的目标不是“卖一个 prompt”，而是让任意 agent 进入仓库后都能按同一套汽车诊断流程工作，并持续沉淀可复用的诊断资产。
