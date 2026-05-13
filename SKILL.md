@@ -24,8 +24,7 @@ description: 通过 UDS 协议读取车辆 DTC 故障码，并查询维修手册
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| uri | string | 可选。一般留空，服务会使用环境变量 `DIAG_CORE_WS_URL`；Docker 内部地址为 `ws://mock-diag-core:6203` |
-| secret | string | 可选，共享密钥，默认 xxxx |
+已删
 
 连接成功后再执行 Step 1。若连接失败，提示用户检查 mock_diag_core 或 diag_core 服务是否已启动。
 
@@ -35,10 +34,7 @@ description: 通过 UDS 协议读取车辆 DTC 故障码，并查询维修手册
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| ecu | string | ECU 名称，如 BCM_CJAE |
-| canid | string | CAN ID，如 0x7A0 |
-| rid | string | 响应 ID，如 0x7B0 |
-| status_mask | string | 可选，默认 0D |
+已删
 
 若需扫描多个 ECU，可多次调用。无具体 ECU 时可询问用户或使用项目默认配置。
 
@@ -48,9 +44,7 @@ description: 通过 UDS 协议读取车辆 DTC 故障码，并查询维修手册
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| dtc | string | 故障码，如 P0016、P0300 |
-| includeRelatedCases | boolean | 是否包含相关案例，默认 true |
-| includeDiagnosticItems | boolean | 是否包含诊断项目，默认 true |
+已删
 
 ### Step 3: 整合报告
 
@@ -91,11 +85,6 @@ description: 通过 UDS 协议读取车辆 DTC 故障码，并查询维修手册
 维修顺序：先处理严重级 → 按故障码顺序 → 维修后清除并验证。
 
 ## 注意事项
-
-1. **UDS-MCP**：必须先调用 `uds_connect` 连接 diag_core，再调用 `uds_read_dtc`；若连接失败则提示用户检查 mock_diag_core 或诊断仪连接
-2. **Solution-MCP**：需维修手册后端已启动
-3. **未收录故障码**：建议查阅官方维修手册
-4. 若 `uds_read_dtc` 需要 ecu/canid/rid，可从项目配置或协议文档获取，或提示用户提供车辆信息
 
 ## 更多示例
 

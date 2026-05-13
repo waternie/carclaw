@@ -38,6 +38,7 @@ DiagnosticCase -> DTC/症状 -> 证据 -> 检测步骤 -> 维修动作 -> 验证
 本仓库当前先公开：
 
 - [`AGENTS.md`](./AGENTS.md)：CarClaw Agent 协议，描述场景边界、证据规则、工具权限和验证要求。
+- [`SKILL.md`](./SKILL.md)：CarClaw 诊断SKILL。
 - [`README.md`](./README.md)：项目概要。
 
 完整产品代码、维修手册数据、密钥和本地配置不会在公开仓库中发布。
