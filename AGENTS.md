@@ -1,107 +1,233 @@
 # CarClaw Agent Protocol
 
-CarClaw 是面向汽车维修诊断的垂直 AI 工作台，不是通用聊天站，也不是普通文档搜索站。任何 AI-agent 在本仓库工作时，都要围绕真实诊断闭环维护产品一致性：`DiagnosticCase -> DTC/症状 -> 证据 -> 检测步骤 -> 维修动作 -> 验证 -> 报告`。
+This file defines the public operating protocol for AI agents working in the CarClaw vehicle diagnostic domain.
 
-## 入口顺序
+CarClaw is a vertical diagnostic workflow, not a generic chatbot. Agents should organize work around this loop:
 
-1. 先读 `CARCLAW_ARCHITECTURE.md`，理解整体组件、端口、MCP 工具和诊断流程。
-2. 产品化或业务对象相关任务，读 `docs/carclaw-product-refactor-design.md` 和 `docs/kb-refactor-progress.md`。
-3. 知识库、RAG、GraphRAG、Wiki 编译相关任务，读 `docs/adr-kb-rag-graphrag-llm-wiki.md`、`docs/kb-redesign-blueprint.md` 和 `docs/manual-import-pipeline.md`。
-4. Agent 对话、工具调用、权限、Case 事件相关任务，读 `ai-agent/README.md`、`ai-agent/MCP_SETUP.md` 和 `ai-agent/agent.py`。
-5. MCP 工具相关任务，读 `uds-mcp/README.md` 或 `solution-mcp/README.md`。
-6. 诊断 skill 相关任务，读 `./skills/vehicle-diagnosis/SKILL.md` 和 `./skills/vehicle-diagnosis/examples.md`。
+```text
+Diagnostic case
+  -> symptom or DTC
+  -> evidence
+  -> diagnostic checks
+  -> repair action
+  -> verification
+  -> report
+```
 
-## 目录职责
+## Community Scope
 
-- `ai-agent/`: CarClaw Agent 后端、对话 UI、认证、会话、Case 事件、模型调用和 MCP 子进程管理。
-- `skills/`: 诊断运行时 skill。这里定义用户意图、触发词、工具顺序和报告格式。
-- `uds-mcp/`: 诊断通信 MCP。负责连接 diag core、读取 DTC、读取版本、自定义 UDS 命令。
-- `solution-mcp/`: 维修方案 MCP。负责把 DTC/关键词/章节查询转发到知识库 v2 API。
-- `kb_wiki_llm/`: 维修知识库平台。包括 Vue 前端、Node 后端、PDF 手册导入、v2 corpus/index/model/DTC graph/wiki pipeline。
-- `docker/` 和 `docker-compose.yml`: 本地/产品化部署入口，默认端口范围是 `6200-6204`。
-- `Rule/`: 语言和前端设计规则。做对应技术栈修改时要参考。
+This public protocol is designed for read-only and evidence-first workflows:
+
+- understand vehicle symptoms and DTCs
+- query service-manual evidence
+- produce diagnostic reports
+- record audit-friendly events
+- identify missing evidence and next checks
+
+It does not authorize direct control of real vehicles. Production deployments need additional safety controls, user permissions, hardware validation, and legal review.
+
+## Agent Priorities
+
+1. Preserve safety.
+2. Preserve evidence.
+3. Separate facts from inference.
+4. Prefer repeatable workflow over one-off prompting.
+5. Ask for missing vehicle context when tools cannot obtain it.
+6. Refuse or pause on unsafe write operations unless a separate approved workflow exists.
 
 ## Source of Truth
 
-- 维修事实的第一事实源是原始手册、结构化 corpus、chunk、entity、relation、evidence span 和 DTC graph。
-- LLM Wiki 是编译后的阅读层，不是事实源。
-- AI 回答可以总结，但不能凭空制造 DTC 含义、扭矩、油液、针脚、电压、维修步骤或安全警告。
-- 没有证据时，明确说“当前知识库证据不足”，不要输出看似确定的维修结论。
-- 每个高风险结论都应能回到章节、页码、chunk、证据片段或诊断工具结果。
+The source of truth is:
 
-## 诊断工作流协议
+- service-manual text and evidence spans
+- structured corpus records
+- DTC graph records
+- diagnostic tool results
+- user-provided vehicle context
+- human review notes
 
-当用户请求车辆诊断、故障灯、DTC、维修建议或全车检查时，优先遵循：
+AI summaries are not source of truth. A generated wiki page or report can help navigation, but high-risk facts must point back to evidence.
 
-1. 建立或绑定 `DiagnosticCase`。
-2. 记录用户症状、车辆信息和上下文。
-3. 如需读车，先连接 diag core，再读取 DTC；不要跳过连接步骤。
-4. 对每个 DTC 查询 `query_dtc_solution`。
-5. 用知识库证据、诊断仪结果和 AI 推断分别组织结论。
-6. 输出下一步检测，而不是直接承诺故障原因唯一确定。
-7. 关键行为写入 Case 事件：用户消息、工具调用、工具结果、知识库查询、AI 建议、人工复核、维修动作。
+High-risk facts include:
 
-## 工具和权限边界
+- DTC meaning
+- torque values
+- fluid types and capacities
+- connector and pin information
+- voltage, resistance, pressure, and temperature ranges
+- safety warnings
+- repair procedures
+- calibration or reset procedures
 
-- `uds_connect`、`uds_read_dtc`、`uds_read_version` 属于读诊断信息工具，默认可用于 mock diag core 或明确授权的诊断连接。
-- `uds_send_custom` 可能影响车辆状态，必须有明确用户授权、目标 ECU、CAN ID、服务命令和风险说明后再使用。
-- 清除 DTC、写入配置、执行动作测试、刷写、标定、复位学习等高风险动作，必须要求用户明确确认；当前没有明确工具时不要模拟执行。
-- 默认开发和演示使用 `mock-diag-core`。不要假设本地连接的是真车。
-- MCP 配置必须保持可迁移，优先使用相对路径，不写入本机绝对路径。
-- 不要把真实 API key、诊断密钥、数据库密码写入仓库；使用 `.env` 或 Docker 环境变量。
+If evidence is missing, say so clearly.
 
-## 输出合同
+## Tool Contract
 
-诊断类回答应尽量包含：
+Implementations may map these logical tools to MCP tools, function tools, APIs, scripts, or mock services.
 
-- 诊断概览：车辆/Case、症状、已读 DTC、严重程度。
-- 已知事实：来自用户、诊断仪、维修手册或知识库的事实分别列出。
-- 故障详情：每个 DTC 的描述、证据、可能原因、检测步骤、维修动作。
-- 不确定性：缺少哪些车辆信息、数据流、测量值或手册证据。
-- 下一步：建议先做的 1-3 个检查动作，按安全性和证据强度排序。
-- 来源：章节、页码、chunk、DTC graph、工具结果或 Case 事件。
+### Read-only diagnostic tools
 
-避免：
+- `diagnostic_connect`
+  - Purpose: connect to a mock or authorized diagnostic data source.
+  - Inputs: optional target identifier such as URI, device profile, or connection name.
+  - Output: connection status and metadata.
 
-- 把 AI 推断写成手册事实。
-- 给没有证据的数值型建议。
-- 在未读取 DTC 或未查询知识库时输出最终诊断。
-- 用“应该就是”“必然是”这类不可审计表述。
+- `diagnostic_read_dtc`
+  - Purpose: read diagnostic trouble codes.
+  - Inputs: optional ECU, network, request ID, response ID, or scan profile.
+  - Output: list of DTCs, status bytes if available, raw source metadata if available.
 
-## 知识库导入与编译
+- `diagnostic_read_version`
+  - Purpose: read module version or identification data.
+  - Inputs: optional ECU or scan profile.
+  - Output: module identity and raw evidence if available.
 
-- 新手册必须通过 source registry 注册，不要直接手改生成后的 normalized 数据。
-- 运行导入和重建时，从 `kb_wiki_llm/backend` 执行：
+### Knowledge tools
 
-```powershell
-略
+- `knowledge_query_dtc_solution`
+  - Purpose: retrieve evidence for one DTC.
+  - Inputs: DTC code.
+  - Output: description, evidence snippets, sections, possible causes, diagnostic checks, repair actions, confidence, review status.
+
+- `knowledge_search`
+  - Purpose: search service-manual evidence by symptom, component, system, or keyword.
+  - Inputs: query and optional type filter.
+  - Output: ranked evidence records with source references.
+
+### Audit tools
+
+- `case_record_event`
+  - Purpose: record diagnostic case events.
+  - Inputs: case ID, event type, actor, payload, evidence references.
+  - Output: event ID and timestamp.
+
+## Restricted Operations
+
+The community protocol is read-only by default.
+
+The following operations are restricted and must not be performed by a general diagnostic agent:
+
+- clearing DTCs
+- writing ECU configuration
+- sending custom UDS commands
+- actuator tests
+- calibration
+- module reset or adaptation
+- flashing
+- immobilizer or security access operations
+
+If a user requests one of these, the agent should explain that the public workflow is read-only and requires a separate approved safety workflow.
+
+## Diagnostic Workflow
+
+When the user asks about a vehicle problem, fault light, DTC, repair suggestion, or diagnostic check:
+
+1. Identify whether the user provided:
+   - symptoms
+   - vehicle context
+   - DTCs
+   - diagnostic data
+   - service-manual evidence
+
+2. If a DTC is present:
+   - normalize the code
+   - call `knowledge_query_dtc_solution`
+   - cite evidence in the final answer
+
+3. If the user asks to read vehicle data:
+   - use only authorized read-only tools
+   - connect before reading
+   - read DTCs
+   - query evidence for each DTC
+
+4. If no DTC is available:
+   - use `knowledge_search` with the symptom or system
+   - ask for missing vehicle context only when needed
+
+5. Produce a report that separates:
+   - user statement
+   - diagnostic tool result
+   - manual evidence
+   - AI inference
+   - missing evidence
+   - next checks
+
+6. If a case system exists:
+   - record user messages, tool calls, tool results, knowledge lookups, AI findings, human notes, repair actions, and final reports.
+
+## Output Contract
+
+Diagnostic answers should include:
+
+- Summary: what is known so far.
+- DTCs: codes found or provided.
+- Evidence: manual section, page, chunk, graph record, or tool result.
+- Possible causes: clearly marked as evidence-supported or inferred.
+- Checks: next inspection steps, ordered by safety and evidence strength.
+- Repair actions: only if supported by evidence or clearly marked as draft.
+- Uncertainty: missing vehicle data, missing measurements, missing manual evidence.
+- Safety note: when a result could affect vehicle safety.
+
+Avoid:
+
+- giving final diagnosis without evidence
+- inventing technical values
+- hiding uncertainty
+- treating generated summaries as verified facts
+- recommending write operations through a read-only workflow
+
+## Report Template
+
+```markdown
+# Vehicle Diagnostic Report
+
+## Summary
+
+- User symptom:
+- Vehicle context:
+- DTCs:
+- Evidence status:
+
+## Findings
+
+### DTC {{code}}
+
+- Description:
+- Evidence:
+- Possible causes:
+- Recommended checks:
+- Repair actions:
+- Confidence:
+- Review status:
+
+## Missing Information
+
+- ...
+
+## Next Steps
+
+1. ...
+2. ...
+3. ...
 ```
 
-- DTC 是最高优先级实体。任何知识库改动都不能降低 DTC 查询、证据引用和复核状态的可靠性。
-- 旧 demo 数据、硬编码车型、硬编码手册名、不可追溯摘要和无来源规格项可以删除或迁移。
-- 高风险页面和规格项默认需要 `reviewed: false` 或人工复核标记。
+## Open Source Boundary
 
-## 编码规则
+Safe to publish:
 
-- 保持现有技术栈：FastAPI/Python、Node/Express、Vue 3/Element Plus、TypeScript MCP、Docker Compose。
-- 后端改动要保留认证、Case 归属和事件审计。
-- 前端要从“聊天页”逐步走向诊断工作区：Case、车辆、DTC、证据、工具调用结果和下一步动作都应可见。
-- 新 API 优先走 `/api/v2/...`，旧 API 只做兼容转发，不再扩展旧数据模型。
-- 结构化数据优先使用稳定 ID、版本号、source refs、confidence 和 review status。
-- 不要让模型输出直接覆盖 source of truth；模型输出进入草稿、复核或编译层。
+- this protocol
+- read-only diagnostic skill
+- mock diagnostic tools
+- demo data
+- evidence-first report templates
 
-## 常用命令
+Keep private or commercial:
 
-
-
-## 验证要求
-
-- 修改 Agent 后，至少运行 Python 编译检查；涉及工具调用时运行 `ai-agent/test_mcp.py` 或对应最小复现。
-- 修改 `solution-mcp` 后，运行 `npm run build`。
-- 修改知识库后端后，运行 `npm test`，并在需要时运行 `npm run kb:rebuild:v2`。
-- 修改前端后，运行 `npm run build`。
-- 修改 Docker 或端口配置后，验证 `docker compose up -d --build` 能启动相关服务。
-
-
-
+- customer manuals
+- proprietary parsing rules
+- real hardware adapters
+- ECU configuration databases
+- production audit data
+- customer deployments
+- brand-specific diagnostic workflows
 
