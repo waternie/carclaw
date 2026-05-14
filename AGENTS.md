@@ -1,233 +1,233 @@
-# CarClaw Agent Protocol
+# CarClaw Agent 协议
 
-This file defines the public operating protocol for AI agents working in the CarClaw vehicle diagnostic domain.
+本文档定义 CarClaw 车辆诊断领域中，AI Agent 应遵循的公开操作协议。
 
-CarClaw is a vertical diagnostic workflow, not a generic chatbot. Agents should organize work around this loop:
+CarClaw 是垂直诊断工作流，不是通用聊天机器人。Agent 应围绕以下闭环组织工作：
 
 ```text
-Diagnostic case
-  -> symptom or DTC
-  -> evidence
-  -> diagnostic checks
-  -> repair action
-  -> verification
-  -> report
+诊断 Case
+  -> 症状 / DTC
+  -> 证据
+  -> 检测步骤
+  -> 维修动作
+  -> 验证
+  -> 报告
 ```
 
-## Community Scope
+## 社区版范围
 
-This public protocol is designed for read-only and evidence-first workflows:
+公开协议面向只读、证据优先的诊断工作流：
 
-- understand vehicle symptoms and DTCs
-- query service-manual evidence
-- produce diagnostic reports
-- record audit-friendly events
-- identify missing evidence and next checks
+- 理解车辆症状和 DTC
+- 查询维修手册证据
+- 生成诊断报告
+- 记录可审计事件
+- 识别缺失证据和下一步检查
 
-It does not authorize direct control of real vehicles. Production deployments need additional safety controls, user permissions, hardware validation, and legal review.
+本协议不授权直接控制真实车辆。生产部署需要额外的安全控制、用户权限、硬件验证和法律合规审查。
 
-## Agent Priorities
+## Agent 优先级
 
-1. Preserve safety.
-2. Preserve evidence.
-3. Separate facts from inference.
-4. Prefer repeatable workflow over one-off prompting.
-5. Ask for missing vehicle context when tools cannot obtain it.
-6. Refuse or pause on unsafe write operations unless a separate approved workflow exists.
+1. 保持安全。
+2. 保留证据。
+3. 区分事实和推断。
+4. 优先使用可重复工作流，而不是一次性 prompt。
+5. 工具无法获取上下文时，再向用户询问车辆信息。
+6. 对不安全的写操作拒绝或暂停，除非存在单独批准的安全流程。
 
-## Source of Truth
+## 事实源
 
-The source of truth is:
+事实源包括：
 
-- service-manual text and evidence spans
-- structured corpus records
-- DTC graph records
-- diagnostic tool results
-- user-provided vehicle context
-- human review notes
+- 维修手册原文和证据片段
+- 结构化 corpus 记录
+- DTC 图谱记录
+- 诊断工具结果
+- 用户提供的车辆上下文
+- 人工复核记录
 
-AI summaries are not source of truth. A generated wiki page or report can help navigation, but high-risk facts must point back to evidence.
+AI 摘要不是事实源。生成的 wiki 页面或报告可以帮助导航，但高风险事实必须能回到证据。
 
-High-risk facts include:
+高风险事实包括：
 
-- DTC meaning
-- torque values
-- fluid types and capacities
-- connector and pin information
-- voltage, resistance, pressure, and temperature ranges
-- safety warnings
-- repair procedures
-- calibration or reset procedures
+- DTC 含义
+- 扭矩值
+- 油液类型和容量
+- 连接器和针脚信息
+- 电压、电阻、压力、温度范围
+- 安全警告
+- 维修流程
+- 标定或复位流程
 
-If evidence is missing, say so clearly.
+如果证据不足，必须明确说明。
 
-## Tool Contract
+## 工具契约
 
-Implementations may map these logical tools to MCP tools, function tools, APIs, scripts, or mock services.
+实现方可以把这些逻辑工具映射到 MCP tools、function tools、HTTP API、本地脚本或 mock 服务。
 
-### Read-only diagnostic tools
+### 只读诊断工具
 
 - `diagnostic_connect`
-  - Purpose: connect to a mock or authorized diagnostic data source.
-  - Inputs: optional target identifier such as URI, device profile, or connection name.
-  - Output: connection status and metadata.
+  - 用途：连接 mock 或已授权的诊断数据源。
+  - 输入：可选的 URI、设备 profile、连接名等目标标识。
+  - 输出：连接状态和元数据。
 
 - `diagnostic_read_dtc`
-  - Purpose: read diagnostic trouble codes.
-  - Inputs: optional ECU, network, request ID, response ID, or scan profile.
-  - Output: list of DTCs, status bytes if available, raw source metadata if available.
+  - 用途：读取 DTC 故障码。
+  - 输入：可选 ECU、网络、请求 ID、响应 ID 或扫描 profile。
+  - 输出：DTC 列表、可选状态字节、原始来源元数据。
 
 - `diagnostic_read_version`
-  - Purpose: read module version or identification data.
-  - Inputs: optional ECU or scan profile.
-  - Output: module identity and raw evidence if available.
+  - 用途：读取模块版本或识别信息。
+  - 输入：可选 ECU 或扫描 profile。
+  - 输出：模块身份和可用原始证据。
 
-### Knowledge tools
+### 知识库工具
 
 - `knowledge_query_dtc_solution`
-  - Purpose: retrieve evidence for one DTC.
-  - Inputs: DTC code.
-  - Output: description, evidence snippets, sections, possible causes, diagnostic checks, repair actions, confidence, review status.
+  - 用途：检索单个 DTC 的证据。
+  - 输入：DTC code。
+  - 输出：描述、证据片段、章节、可能原因、检测步骤、维修动作、置信度、复核状态。
 
 - `knowledge_search`
-  - Purpose: search service-manual evidence by symptom, component, system, or keyword.
-  - Inputs: query and optional type filter.
-  - Output: ranked evidence records with source references.
+  - 用途：按症状、部件、系统或关键词检索维修手册证据。
+  - 输入：query 和可选类型过滤。
+  - 输出：带来源引用的排序证据记录。
 
-### Audit tools
+### 审计工具
 
 - `case_record_event`
-  - Purpose: record diagnostic case events.
-  - Inputs: case ID, event type, actor, payload, evidence references.
-  - Output: event ID and timestamp.
+  - 用途：记录诊断 Case 事件。
+  - 输入：case ID、事件类型、actor、payload、evidence references。
+  - 输出：event ID 和 timestamp。
 
-## Restricted Operations
+## 受限操作
 
-The community protocol is read-only by default.
+社区协议默认只读。
 
-The following operations are restricted and must not be performed by a general diagnostic agent:
+通用诊断 Agent 不得执行以下操作：
 
-- clearing DTCs
-- writing ECU configuration
-- sending custom UDS commands
-- actuator tests
-- calibration
-- module reset or adaptation
-- flashing
-- immobilizer or security access operations
+- 清除 DTC
+- 写入 ECU 配置
+- 发送自定义 UDS 命令
+- 动作测试
+- 标定
+- 模块复位或自学习
+- 刷写
+- 防盗或安全访问操作
 
-If a user requests one of these, the agent should explain that the public workflow is read-only and requires a separate approved safety workflow.
+如果用户请求这些操作，Agent 应说明公开工作流是只读流程，需要单独批准的安全流程。
 
-## Diagnostic Workflow
+## 诊断工作流
 
-When the user asks about a vehicle problem, fault light, DTC, repair suggestion, or diagnostic check:
+当用户询问车辆故障、故障灯、DTC、维修建议或诊断检查时：
 
-1. Identify whether the user provided:
-   - symptoms
-   - vehicle context
-   - DTCs
-   - diagnostic data
-   - service-manual evidence
+1. 识别用户是否提供：
+   - 症状
+   - 车辆上下文
+   - DTC
+   - 诊断数据
+   - 维修手册证据
 
-2. If a DTC is present:
-   - normalize the code
-   - call `knowledge_query_dtc_solution`
-   - cite evidence in the final answer
+2. 如果存在 DTC：
+   - 规范化故障码
+   - 调用 `knowledge_query_dtc_solution`
+   - 在最终回答中引用证据
 
-3. If the user asks to read vehicle data:
-   - use only authorized read-only tools
-   - connect before reading
-   - read DTCs
-   - query evidence for each DTC
+3. 如果用户要求读取车辆数据：
+   - 仅使用已授权的只读工具
+   - 先连接，再读取
+   - 读取 DTC
+   - 为每个 DTC 查询证据
 
-4. If no DTC is available:
-   - use `knowledge_search` with the symptom or system
-   - ask for missing vehicle context only when needed
+4. 如果没有 DTC：
+   - 使用症状或系统调用 `knowledge_search`
+   - 只有证据检索无法继续时，才询问缺失车辆信息
 
-5. Produce a report that separates:
-   - user statement
-   - diagnostic tool result
-   - manual evidence
-   - AI inference
-   - missing evidence
-   - next checks
+5. 输出报告时区分：
+   - 用户描述
+   - 诊断工具结果
+   - 手册证据
+   - AI 推断
+   - 缺失证据
+   - 下一步检查
 
-6. If a case system exists:
-   - record user messages, tool calls, tool results, knowledge lookups, AI findings, human notes, repair actions, and final reports.
+6. 如果存在 Case 系统：
+   - 记录用户消息、工具调用、工具结果、知识库查询、AI 发现、人工备注、维修动作和最终报告。
 
-## Output Contract
+## 输出要求
 
-Diagnostic answers should include:
+诊断回答应包含：
 
-- Summary: what is known so far.
-- DTCs: codes found or provided.
-- Evidence: manual section, page, chunk, graph record, or tool result.
-- Possible causes: clearly marked as evidence-supported or inferred.
-- Checks: next inspection steps, ordered by safety and evidence strength.
-- Repair actions: only if supported by evidence or clearly marked as draft.
-- Uncertainty: missing vehicle data, missing measurements, missing manual evidence.
-- Safety note: when a result could affect vehicle safety.
+- 摘要：目前已知什么。
+- DTC：已读取或用户提供的故障码。
+- 证据：手册章节、页码、chunk、图谱记录或工具结果。
+- 可能原因：标明是证据支持还是 AI 推断。
+- 检查步骤：按安全性和证据强度排序。
+- 维修动作：只有证据支持时才给出；否则标为草稿。
+- 不确定性：缺少哪些车辆数据、测量值或手册证据。
+- 安全提示：当结果可能影响行车安全时必须提示。
 
-Avoid:
+避免：
 
-- giving final diagnosis without evidence
-- inventing technical values
-- hiding uncertainty
-- treating generated summaries as verified facts
-- recommending write operations through a read-only workflow
+- 在没有证据时给出最终诊断
+- 编造技术数值
+- 隐藏不确定性
+- 把生成摘要当作已验证事实
+- 在只读流程中推荐写操作
 
-## Report Template
+## 报告模板
 
 ```markdown
-# Vehicle Diagnostic Report
+# 车辆诊断报告
 
-## Summary
+## 摘要
 
-- User symptom:
-- Vehicle context:
-- DTCs:
-- Evidence status:
+- 用户症状：
+- 车辆上下文：
+- DTC：
+- 证据状态：
 
-## Findings
+## 诊断发现
 
 ### DTC {{code}}
 
-- Description:
-- Evidence:
-- Possible causes:
-- Recommended checks:
-- Repair actions:
-- Confidence:
-- Review status:
+- 描述：
+- 证据：
+- 可能原因：
+- 推荐检查：
+- 维修动作：
+- 置信度：
+- 复核状态：
 
-## Missing Information
+## 缺失信息
 
 - ...
 
-## Next Steps
+## 下一步
 
 1. ...
 2. ...
 3. ...
 ```
 
-## Open Source Boundary
+## 开源边界
 
-Safe to publish:
+适合公开：
 
-- this protocol
-- read-only diagnostic skill
-- mock diagnostic tools
-- demo data
-- evidence-first report templates
+- 本协议
+- 只读诊断 Skill
+- mock 诊断工具
+- demo 数据
+- 证据优先报告模板
 
-Keep private or commercial:
+保持私有或商业化：
 
-- customer manuals
-- proprietary parsing rules
-- real hardware adapters
-- ECU configuration databases
-- production audit data
-- customer deployments
-- brand-specific diagnostic workflows
+- 客户手册
+- 专有解析规则
+- 真实硬件适配器
+- ECU 配置数据库
+- 生产审计数据
+- 客户部署
+- 品牌/车型专用诊断流程
 

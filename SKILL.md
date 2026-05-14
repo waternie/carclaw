@@ -1,37 +1,37 @@
 ---
 name: vehicle-diagnosis-community
-description: Read-only vehicle diagnostic workflow. Use when the user asks about vehicle symptoms, fault lights, DTCs, diagnostic checks, or repair guidance. This community skill retrieves DTCs and service-manual evidence, then produces an evidence-first report.
+description: 只读车辆诊断工作流。适用于用户询问车辆症状、故障灯、DTC、诊断检查或维修建议。本社区 Skill 会检索 DTC 和维修手册证据，并生成证据优先的诊断报告。
 ---
 
-# Vehicle Diagnosis Community Skill
+# 车辆诊断社区 Skill
 
-This is the public read-only diagnostic skill for CarClaw-style agents.
+这是 CarClaw 风格 Agent 的公开只读诊断 Skill。
 
-It is designed for mock environments, authorized read-only diagnostic data, and service-manual evidence lookup. It does not authorize clearing codes, writing ECU configuration, running actuator tests, calibration, flashing, or custom UDS commands.
+它适用于 mock 环境、已授权的只读诊断数据和维修手册证据检索。它不授权清码、写 ECU 配置、动作测试、标定、刷写或自定义 UDS 命令。
 
-## Trigger Examples
+## 触发示例
 
-Use this skill when the user says things like:
+当用户这样提问时使用本 Skill：
 
-- "Check this vehicle fault"
-- "The engine light is on"
-- "Read the fault codes"
-- "What does P0300 mean?"
-- "Diagnose this DTC"
-- "Search the manual for this symptom"
-- "帮我诊断一下车辆故障"
-- "发动机故障灯亮了"
-- "读一下故障码"
+- “帮我诊断一下车辆故障”
+- “发动机故障灯亮了”
+- “读一下故障码”
+- “P0300 是什么意思？”
+- “根据这个 DTC 给我诊断建议”
+- “帮我查一下这个症状对应的维修手册证据”
+- “Check this vehicle fault”
+- “The engine light is on”
+- “Read the fault codes”
 
-## Required Tool Capabilities
+## 所需工具能力
 
-Map these logical tools to your runtime, MCP server, function tools, or local APIs.
+可以把这些逻辑工具映射到你的 MCP server、function tools、本地 API 或脚本。
 
 ### `diagnostic_connect`
 
-Connect to a mock or authorized diagnostic data source.
+连接 mock 或已授权的诊断数据源。
 
-Suggested input:
+建议输入：
 
 ```json
 {
@@ -39,7 +39,7 @@ Suggested input:
 }
 ```
 
-Expected output:
+期望输出：
 
 ```json
 {
@@ -51,9 +51,9 @@ Expected output:
 
 ### `diagnostic_read_dtc`
 
-Read diagnostic trouble codes from an authorized source.
+从已授权的数据源读取 DTC。
 
-Suggested input:
+建议输入：
 
 ```json
 {
@@ -62,7 +62,7 @@ Suggested input:
 }
 ```
 
-Expected output:
+期望输出：
 
 ```json
 {
@@ -74,9 +74,9 @@ Expected output:
 
 ### `knowledge_query_dtc_solution`
 
-Query service-manual evidence for one DTC.
+查询单个 DTC 的维修手册证据。
 
-Suggested input:
+建议输入：
 
 ```json
 {
@@ -86,7 +86,7 @@ Suggested input:
 }
 ```
 
-Expected output:
+期望输出：
 
 ```json
 {
@@ -103,9 +103,9 @@ Expected output:
 
 ### `knowledge_search`
 
-Search evidence by symptom, component, system, or keyword when no DTC is available.
+当没有 DTC 时，按症状、部件、系统或关键词检索证据。
 
-Suggested input:
+建议输入：
 
 ```json
 {
@@ -114,122 +114,122 @@ Suggested input:
 }
 ```
 
-## Workflow
+## 工作流
 
-### Step 1: Classify the request
+### Step 1：判断请求类型
 
-Identify whether the user provided:
+识别用户是否提供：
 
-- a DTC
-- symptoms
-- vehicle context
-- diagnostic tool output
-- a request to read DTCs
-- a repair or inspection question
+- DTC
+- 症状
+- 车辆上下文
+- 诊断工具输出
+- 读取 DTC 的请求
+- 维修或检查问题
 
-### Step 2: Retrieve evidence
+### Step 2：检索证据
 
-If DTCs are already present:
+如果用户已经提供 DTC：
 
-1. Normalize the DTC codes.
-2. Call `knowledge_query_dtc_solution` for each code.
-3. Keep evidence references for the final report.
+1. 规范化 DTC code。
+2. 对每个 code 调用 `knowledge_query_dtc_solution`。
+3. 保留证据引用，用于最终报告。
 
-If the user asks to read DTCs:
+如果用户要求读取 DTC：
 
-1. Call `diagnostic_connect`.
-2. If connected, call `diagnostic_read_dtc`.
-3. For each DTC, call `knowledge_query_dtc_solution`.
+1. 调用 `diagnostic_connect`。
+2. 连接成功后调用 `diagnostic_read_dtc`。
+3. 对每个 DTC 调用 `knowledge_query_dtc_solution`。
 
-If no DTC is available:
+如果没有 DTC：
 
-1. Call `knowledge_search` with the symptom or system.
-2. Ask for missing vehicle context only if evidence lookup cannot proceed.
+1. 用症状或系统调用 `knowledge_search`。
+2. 只有在证据检索无法继续时，才询问缺失车辆信息。
 
-### Step 3: Reason with boundaries
+### Step 3：带边界地推理
 
-Separate:
+明确区分：
 
-- user statement
-- diagnostic tool result
-- service-manual evidence
-- AI inference
-- missing evidence
+- 用户描述
+- 诊断工具结果
+- 维修手册证据
+- AI 推断
+- 缺失证据
 
-Do not turn inference into fact. Do not invent values or procedures.
+不要把推断写成事实。不要编造数值或流程。
 
-### Step 4: Produce the report
+### Step 4：输出报告
 
-Use this format:
+使用以下格式：
 
 ```markdown
-# Vehicle Diagnostic Report
+# 车辆诊断报告
 
-## Summary
+## 摘要
 
-- User symptom:
-- Vehicle context:
-- DTCs:
-- Evidence status:
+- 用户症状：
+- 车辆上下文：
+- DTC：
+- 证据状态：
 
-## Findings
+## 诊断发现
 
 ### DTC {{code}}
 
-- Description:
-- Evidence:
-- Possible causes:
-- Recommended checks:
-- Repair actions:
-- Confidence:
-- Review status:
+- 描述：
+- 证据：
+- 可能原因：
+- 推荐检查：
+- 维修动作：
+- 置信度：
+- 复核状态：
 
-## Missing Information
+## 缺失信息
 
 - ...
 
-## Next Steps
+## 下一步
 
 1. ...
 2. ...
 3. ...
 ```
 
-## Safety Rules
+## 安全规则
 
-- Read-only tools are allowed for mock or authorized sources.
-- Do not clear DTCs in this community workflow.
-- Do not send custom UDS commands in this community workflow.
-- Do not run actuator tests, calibration, adaptation, flashing, or write operations.
-- If the user requests a restricted operation, explain that it requires a separate approved safety workflow.
-- If evidence is missing, say "the current knowledge base does not have enough evidence" and recommend what data is needed next.
+- 对 mock 或已授权来源，可以使用只读工具。
+- 本社区工作流不清除 DTC。
+- 本社区工作流不发送自定义 UDS 命令。
+- 不执行动作测试、标定、自学习、刷写或写操作。
+- 如果用户请求受限操作，说明该操作需要单独批准的安全流程。
+- 如果证据不足，说明“当前知识库证据不足”，并建议下一步需要补充的数据。
 
-## Severity Guidance
+## 严重程度建议
 
-Use conservative severity labels:
+使用保守严重程度标签：
 
-| Severity | Meaning | Suggested response |
+| 严重程度 | 含义 | 建议 |
 |---|---|---|
-| Safety critical | May affect braking, steering, high voltage, airbags, fire risk, or drivability safety | Stop and escalate to qualified inspection |
-| High | May damage major components or cause unsafe driving conditions | Inspect soon and avoid unnecessary driving |
-| Medium | Affects performance, emissions, comfort, or reliability | Diagnose and repair in a planned workflow |
-| Low | History code, intermittent issue, or insufficient evidence | Monitor, collect more data, and verify |
+| 安全关键 | 可能影响制动、转向、高压系统、安全气囊、火灾风险或行驶安全 | 停止并交由合格人员检查 |
+| 高 | 可能损坏主要部件或造成不安全驾驶状态 | 尽快检查，避免不必要驾驶 |
+| 中 | 影响性能、排放、舒适性或可靠性 | 按计划诊断和维修 |
+| 低 | 历史码、间歇问题或证据不足 | 监测、收集更多数据并验证 |
 
-Do not claim a severity level is certain unless evidence supports it.
+除非证据支持，不要声称严重程度一定准确。
 
-## Example
+## 示例
 
-User:
+用户：
 
 ```text
-The engine light is on. DTC P0300 was reported.
+发动机故障灯亮了，诊断仪报 P0300。
 ```
 
-Agent behavior:
+Agent 行为：
 
-1. Call `knowledge_query_dtc_solution` for `P0300`.
-2. Summarize evidence.
-3. List possible causes only if supported by evidence.
-4. Recommend inspection steps.
-5. Mark gaps and review status.
+1. 调用 `knowledge_query_dtc_solution` 查询 `P0300`。
+2. 总结证据。
+3. 只列出证据支持的可能原因。
+4. 推荐检查步骤。
+5. 标注证据缺口和复核状态。
 

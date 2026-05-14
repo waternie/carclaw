@@ -1,98 +1,102 @@
-# CarClaw Community Protocol
+# CarClaw 社区协议
 
-CarClaw Community Protocol is an open workflow specification for building AI agents for vehicle diagnostics.
+CarClaw Community Protocol 是一套面向 **车辆维修诊断 AI Agent** 的开源工作流协议。
 
-It focuses on one vertical task:
-
-```text
-Vehicle symptom or DTC
-  -> evidence lookup
-  -> diagnostic reasoning
-  -> next inspection steps
-  -> repair note
-  -> auditable report
-```
-
-The goal is not to publish another generic prompt. The goal is to describe a safe, evidence-first workflow that AI agents can follow when handling vehicle fault codes, service-manual evidence, and diagnostic reports.
-
-## What is included
-
-This public package currently contains:
-
-- [`AGENTS.md`](./AGENTS.md): project-level operating protocol for vehicle diagnostic agents.
-- [`SKILL.md`](./SKILL.md): a community read-only diagnostic skill that can be adapted to agent runtimes.
-- [`README.md`](./README.md): overview and usage notes.
-
-The public version is intentionally small. It is meant to be copied, adapted, reviewed, and used as the starting point for a safe automotive diagnostic agent workflow.
-
-## What is not included
-
-This repository does not include:
-
-- proprietary service manuals
-- customer repair data
-- vehicle-specific ECU configuration
-- CAN ID or response ID databases
-- real hardware adapters
-- commercial parsing rules
-- production deployment code
-- credentials or private environment files
-
-Those belong in private deployments or customer-specific implementations.
-
-## Community scope
-
-The open version is designed for:
-
-- mock diagnostic environments
-- read-only DTC workflows
-- service-manual evidence retrieval
-- agent instruction design
-- safety review
-- proof-of-concept demos
-
-It should not be used to control a real vehicle without a dedicated safety review, explicit user authorization, and hardware-specific validation.
-
-## Recommended architecture
+它不是一个通用聊天提示词，而是把车辆症状、DTC 故障码、维修手册证据、诊断推理和维修报告组织成一个可追溯、可复核的诊断闭环。
 
 ```text
-User or technician
-  -> Diagnostic Agent
-  -> Diagnostic Skill
-  -> Read-only diagnostic tool
-  -> Knowledge lookup tool
-  -> Evidence-first report
+车辆症状 / DTC
+  -> 证据检索
+  -> 诊断推理
+  -> 下一步检查
+  -> 维修记录
+  -> 可审计报告
 ```
 
-Recommended tool categories:
+## 文档入口
 
-- `diagnostic_connect`: connect to a mock or authorized diagnostic data source.
-- `diagnostic_read_dtc`: read DTCs from the authorized source.
-- `knowledge_query_dtc_solution`: query evidence for one DTC.
-- `knowledge_search`: search service-manual evidence by symptom, part, or system.
-- `case_record_event`: optionally record audit events for a diagnostic case.
+| 文档 | 中文 | English |
+|---|---|---|
+| 项目说明 | [README.md](./README.md) | [README.en.md](./README.en.md) |
+| Agent 协议 | [AGENTS.md](./AGENTS.md) | [AGENTS.en.md](./AGENTS.en.md) |
+| 诊断 Skill | [SKILL.md](./SKILL.md) | [SKILL.en.md](./SKILL.en.md) |
 
-Tool names can be mapped to your own MCP tools, function tools, API routes, or local scripts.
+## 这个仓库包含什么
 
-## Safety principles
+- `AGENTS.md`：车辆诊断 Agent 的公开操作协议，定义证据规则、安全边界、工具契约和输出要求。
+- `SKILL.md`：只读版车辆诊断 Skill，可适配到 MCP、function calling、本地脚本或其他 agent runtime。
+- `README.md`：项目定位、开源边界和使用方式。
 
-- Treat service manuals and verified diagnostic data as the source of truth.
-- Separate user statements, tool results, manual evidence, and AI inference.
-- Do not invent fault definitions, torque values, fluid specs, pinouts, voltage ranges, or repair steps.
-- If evidence is missing, say that the knowledge base is insufficient.
-- Keep write operations out of the community skill by default.
-- Never clear DTCs, write ECU configuration, run actuator tests, calibrate modules, or send custom UDS commands without explicit authorization and a separate safety workflow.
+公开版刻意保持轻量，适合作为汽车诊断 Agent 的协议样板、教学材料、安全评审材料或 demo 起点。
 
-## Open source strategy
+## 这个仓库不包含什么
 
-This repository is the public protocol layer.
+本公开仓库不包含：
 
-Recommended open core split:
+- 原厂或第三方专有维修手册
+- 客户维修数据
+- 车型专用 ECU 配置
+- CAN ID / 响应 ID 数据库
+- 真实硬件适配器
+- 商业解析规则
+- 生产部署代码
+- 密钥或私有环境配置
 
-- Open source: protocol, read-only skill, mock tools, demo data, report structure.
-- Commercial or private: customer manuals, data cleaning, brand-specific parsing, real hardware adapters, team workflow, deployment, maintenance, and support.
+这些内容应保留在私有部署、客户项目或商业版本中。
 
-## Status
+## 社区版适用范围
 
-This is an early public protocol package. It is useful as a reference for agent workflow design, but it is not a complete diagnostic product.
+社区版适合：
+
+- mock 诊断环境
+- 只读 DTC 工作流
+- 维修手册证据检索
+- Agent 指令设计
+- 安全边界评审
+- 概念验证 demo
+
+社区版不适合直接控制真实车辆。真实车辆诊断需要额外的安全审查、明确用户授权、硬件验证和合规审查。
+
+## 推荐架构
+
+```text
+用户 / 技师
+  -> 诊断 Agent
+  -> 诊断 Skill
+  -> 只读诊断工具
+  -> 知识库检索工具
+  -> 证据优先报告
+```
+
+推荐工具能力：
+
+- `diagnostic_connect`：连接 mock 或已授权的诊断数据源。
+- `diagnostic_read_dtc`：读取 DTC 故障码。
+- `knowledge_query_dtc_solution`：查询单个 DTC 的证据和维修线索。
+- `knowledge_search`：按症状、部件或系统检索维修手册证据。
+- `case_record_event`：可选，记录诊断 Case 的审计事件。
+
+这些逻辑工具可以映射到 MCP tools、function tools、HTTP API、本地脚本或你自己的 agent runtime。
+
+## 安全原则
+
+- 维修手册、结构化证据和已验证诊断数据是事实源。
+- 明确区分：用户描述、工具结果、手册证据、AI 推断。
+- 不编造 DTC 含义、扭矩、油液规格、针脚、电压范围或维修步骤。
+- 知识库证据不足时，直接说明“当前知识库证据不足”。
+- 社区版默认不包含写操作。
+- 不在社区 Skill 中授权清码、写 ECU 配置、动作测试、标定、刷写或自定义 UDS 命令。
+
+## 开源策略
+
+这个仓库是公开协议层。
+
+建议的 open core 边界：
+
+- 开源：协议、只读 Skill、mock 工具、demo 数据、报告结构。
+- 商业或私有：客户手册、数据清洗、品牌/车型解析规则、真实硬件适配、团队流程、部署、维护和支持。
+
+## 状态
+
+当前是早期公开协议包。它可以作为 Agent 工作流设计参考，但不是完整车辆诊断产品。
 
