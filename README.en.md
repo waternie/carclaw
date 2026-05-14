@@ -21,6 +21,28 @@ Vehicle symptom / DTC
 | Agent protocol | [AGENTS.md](./AGENTS.md) | [AGENTS.en.md](./AGENTS.en.md) |
 | Diagnostic skill | [SKILL.md](./SKILL.md) | [SKILL.en.md](./SKILL.en.md) |
 
+## Screenshots
+
+### Agent tool panel
+
+![CarClaw Agent tool panel](./assets/carclaw-agent-tools.png)
+
+### DTC reading and tool calls
+
+![CarClaw Agent DTC reading](./assets/carclaw-agent-dtc-read.png)
+
+### Evidence-first diagnostic report
+
+![CarClaw Agent diagnostic report](./assets/carclaw-agent-report.png)
+
+### DTC review workbench
+
+![CarClaw DTC review workbench](./assets/carclaw-dtc-review.png)
+
+### Diagnostic Case workbench
+
+![CarClaw Diagnostic Case workbench](./assets/carclaw-diagnostic-case.png)
+
 ## What is included
 
 - `AGENTS.md`: public operating protocol for vehicle diagnostic agents.
@@ -99,4 +121,3 @@ Recommended open core boundary:
 ## Status
 
 This is an early public protocol package. It can be used as a reference for agent workflow design, but it is not a complete vehicle diagnostic product.
-

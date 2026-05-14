@@ -21,6 +21,28 @@ CarClaw Community Protocol 是一套面向 **车辆维修诊断 AI Agent** 的�
 | Agent 协议 | [AGENTS.md](./AGENTS.md) | [AGENTS.en.md](./AGENTS.en.md) |
 | 诊断 Skill | [SKILL.md](./SKILL.md) | [SKILL.en.md](./SKILL.en.md) |
 
+## 产品截图
+
+### Agent 工具面板
+
+![CarClaw Agent 工具面板](./assets/carclaw-agent-tools.png)
+
+### 读取 DTC 与工具调用
+
+![CarClaw Agent 读取 DTC](./assets/carclaw-agent-dtc-read.png)
+
+### 证据优先诊断报告
+
+![CarClaw Agent 诊断报告](./assets/carclaw-agent-report.png)
+
+### DTC 复核工作台
+
+![CarClaw DTC 复核工作台](./assets/carclaw-dtc-review.png)
+
+### 诊断 Case 工作台
+
+![CarClaw 诊断 Case 工作台](./assets/carclaw-diagnostic-case.png)
+
 ## 这个仓库包含什么
 
 - `AGENTS.md`：车辆诊断 Agent 的公开操作协议，定义证据规则、安全边界、工具契约和输出要求。
@@ -99,4 +121,3 @@ CarClaw Community Protocol 是一套面向 **车辆维修诊断 AI Agent** 的�
 ## 状态
 
 当前是早期公开协议包。它可以作为 Agent 工作流设计参考，但不是完整车辆诊断产品。
-
