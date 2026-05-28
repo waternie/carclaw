@@ -1,8 +1,8 @@
-# CarClaw 社区协议
+# CarClaw
 
-CarClaw Community Protocol 是一套面向 **车辆维修诊断 AI Agent** 的开源工作流协议。
+CarClaw 是一套面向 **车辆维修诊断 AI Agent** 的开源工作流协议。
 
-它不是一个通用聊天提示词，而是把车辆症状、DTC 故障码、维修手册证据、诊断推理和维修报告组织成一个可追溯、可复核的诊断闭环。
+它不是“ChatGPT + DTC 故障码解释器”，而是一个 **evidence-first vehicle diagnostic agent protocol**：把车辆症状、DTC、维修手册证据、诊断推理、下一步检查和维修报告组织成可追溯、可复核的诊断闭环。
 
 ```text
 车辆症状 / DTC
@@ -13,6 +13,17 @@ CarClaw Community Protocol 是一套面向 **车辆维修诊断 AI Agent** 的�
   -> 可审计报告
 ```
 
+## 为什么做这个项目
+
+车辆诊断 Agent 最危险的不是“不会回答”，而是：
+
+- 没有证据就给最终诊断
+- 把 AI 推断写成维修手册事实
+- 编造扭矩、油液、电压、针脚或维修步骤
+- 在没有授权和安全流程时执行写操作
+
+CarClaw 的目标是先把 **协议、边界和报告结构** 开源出来，让垂直诊断 Agent 能从第一天起就有证据边界和审计意识。
+
 ## 文档入口
 
 | 文档 | 中文 | English |
@@ -20,6 +31,9 @@ CarClaw Community Protocol 是一套面向 **车辆维修诊断 AI Agent** 的�
 | 项目说明 | [README.md](./README.md) | [README.en.md](./README.en.md) |
 | Agent 协议 | [AGENTS.md](./AGENTS.md) | [AGENTS.en.md](./AGENTS.en.md) |
 | 诊断 Skill | [SKILL.md](./SKILL.md) | [SKILL.en.md](./SKILL.en.md) |
+| Demo 流程 | [docs/demo.md](./docs/demo.md) | - |
+| 架构说明 | [docs/architecture.md](./docs/architecture.md) | - |
+| 路线图 | [ROADMAP.md](./ROADMAP.md) | - |
 
 ## 产品截图
 
@@ -48,6 +62,8 @@ CarClaw Community Protocol 是一套面向 **车辆维修诊断 AI Agent** 的�
 - `AGENTS.md`：车辆诊断 Agent 的公开操作协议，定义证据规则、安全边界、工具契约和输出要求。
 - `SKILL.md`：只读版车辆诊断 Skill，可适配到 MCP、function calling、本地脚本或其他 agent runtime。
 - `README.md`：项目定位、开源边界和使用方式。
+- `docs/demo.md`：从 DTC 到证据优先诊断报告的演示流程。
+- `.github/ISSUE_TEMPLATE/`：协议问题、证据字段建议和工具适配反馈模板。
 
 公开版刻意保持轻量，适合作为汽车诊断 Agent 的协议样板、教学材料、安全评审材料或 demo 起点。
 
@@ -121,3 +137,19 @@ CarClaw Community Protocol 是一套面向 **车辆维修诊断 AI Agent** 的�
 ## 状态
 
 当前是早期公开协议包。它可以作为 Agent 工作流设计参考，但不是完整车辆诊断产品。
+
+## Contributing
+
+欢迎提交 issue 或 PR，尤其是：
+
+- DTC 证据字段建议
+- 诊断报告模板改进
+- 只读工具契约改进
+- mock case 示例
+- 不同 agent runtime 的适配建议
+
+贡献前请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+
+## License
+
+本社区协议包采用 [MIT License](./LICENSE) 开源。

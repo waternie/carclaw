@@ -1,8 +1,8 @@
-# CarClaw Community Protocol
+# CarClaw
 
-CarClaw Community Protocol is an open workflow specification for building **vehicle diagnostic AI agents**.
+CarClaw is an open workflow specification for building **vehicle diagnostic AI agents**.
 
-It is not a generic chat prompt. It organizes vehicle symptoms, DTCs, service-manual evidence, diagnostic reasoning, and repair reports into an auditable workflow.
+It is not "ChatGPT plus a DTC explanation." CarClaw is an **evidence-first vehicle diagnostic agent protocol** that organizes vehicle symptoms, DTCs, service-manual evidence, diagnostic reasoning, next inspection steps, and repair reports into a traceable and reviewable diagnostic loop.
 
 ```text
 Vehicle symptom / DTC
@@ -13,6 +13,17 @@ Vehicle symptom / DTC
   -> auditable report
 ```
 
+## Why this exists
+
+The dangerous part of a vehicle diagnostic agent is not that it fails to answer. The dangerous part is when it:
+
+- gives a final diagnosis without evidence
+- writes AI inference as if it were manual evidence
+- fabricates torque, fluid, voltage, pinout, or repair steps
+- performs write operations without authorization and a safety workflow
+
+CarClaw opens the protocol, boundaries, and report structure first, so vertical diagnostic agents can be evidence-aware and auditable from day one.
+
 ## Documentation
 
 | Document | 中文 | English |
@@ -20,6 +31,9 @@ Vehicle symptom / DTC
 | Overview | [README.md](./README.md) | [README.en.md](./README.en.md) |
 | Agent protocol | [AGENTS.md](./AGENTS.md) | [AGENTS.en.md](./AGENTS.en.md) |
 | Diagnostic skill | [SKILL.md](./SKILL.md) | [SKILL.en.md](./SKILL.en.md) |
+| Demo flow | [docs/demo.md](./docs/demo.md) | - |
+| Architecture | [docs/architecture.md](./docs/architecture.md) | - |
+| Roadmap | [ROADMAP.md](./ROADMAP.md) | - |
 
 ## Screenshots
 
@@ -48,6 +62,8 @@ Vehicle symptom / DTC
 - `AGENTS.md`: public operating protocol for vehicle diagnostic agents.
 - `SKILL.md`: read-only vehicle diagnostic skill for MCP tools, function tools, local scripts, or other agent runtimes.
 - `README.md`: project positioning, open-source boundary, and usage notes.
+- `docs/demo.md`: a demo flow from DTC to an evidence-first diagnostic report.
+- `.github/ISSUE_TEMPLATE/`: templates for protocol issues, evidence field suggestions, and tool adapter feedback.
 
 The public version is intentionally small. It is useful as a protocol sample, teaching material, safety-review artifact, or proof-of-concept starting point.
 
@@ -121,3 +137,19 @@ Recommended open core boundary:
 ## Status
 
 This is an early public protocol package. It can be used as a reference for agent workflow design, but it is not a complete vehicle diagnostic product.
+
+## Contributing
+
+Issues and pull requests are welcome, especially around:
+
+- DTC evidence fields
+- diagnostic report structure
+- read-only tool contracts
+- mock case examples
+- agent runtime adaptation notes
+
+Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before larger changes.
+
+## License
+
+This community protocol package is released under the [MIT License](./LICENSE).
